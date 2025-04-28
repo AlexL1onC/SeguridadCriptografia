@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --main-color: #2c3e50;
+            --accent-color: #3498db;
+        }
+        
+        .sidebar {
+            background: var(--main-color);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+        }
+        
+        .main-content {
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 30px;
+        }
+        
+        .document-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .document-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .btn-primary {
+            background-color: var(--accent-color);
+            border: none;
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <h3 class="mb-4">Monarca Docs</h3>
+                <nav class="nav flex-column">
+                    <a href="/enviar_documento" class="nav-link text-white mb-3">
+                        <i class="bi bi-send me-2"></i>Enviar Documento
+                    </a>
+                    <a href="#" class="nav-link text-white mb-3">
+                        <i class="bi bi-files me-2"></i>Mis Documentos
+                    </a>
+                    <a href="/logout" class="nav-link text-white">
+                        <i class="bi bi-box-arrow-left me-2"></i>Cerrar Sesión
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <h1>Bienvenido, {{ user.username }}</h1>
+                </div>
+
+                <h3 class="mb-4">Documentos por Aprobar</h3>
+                
+                {% for doc in documentos %}
+                <div class="document-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5>{{ doc.filename }}</h5>
+                            <small class="text-muted">Enviado el: [Fecha]</small>
+                        </div>
+                        <a href="/aprobar_documento/{{ doc.id }}" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Aprobar
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
