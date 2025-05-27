@@ -1,0 +1,6 @@
+Usuario,Contraseña,Rango,Admin
+Ejemplo1,CasaMonarca1,1,False
+Ejemplo2,CasaMonarca2,2,False
+Ejemplo3,CasaMonarca3,3,False
+Ejemplo4,CasaMonarca4,4,False
+Admin,Admin25,0,True

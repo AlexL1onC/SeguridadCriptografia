@@ -22,6 +22,7 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True)
     password = db.Column(db.String(200))  # deja espacio para el hash
     rank = db.Column(db.Integer)
+    admin = db.Column(db.Boolean)
 
 
 class Document(db.Model):
@@ -32,11 +33,12 @@ class Document(db.Model):
     current_approver = db.Column(db.Integer)
     status = db.Column(db.String(20))  # pending, approved, rejected
     approvers = db.Column(db.String(255))  # IDs separados por comas
+    category = db.Column(db.String(255))
 
 
 # --- Carga de usuarios desde CSV (solo UTF-8 sin BOM) ---
 def load_users():
-    csv_path = os.path.join(os.path.dirname(__file__), "Ej_usuarios.csv")
+    csv_path = os.path.join(os.path.dirname(__file__), "instance", "usuarios.csv")
     with open(csv_path, newline="", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f, delimiter=",")  # Cambiar a coma <---
         # ... resto del código ...
@@ -45,11 +47,16 @@ def load_users():
             usr = row.get("Usuario")
             pwd = row.get("Contraseña")
             rng = row.get("Rango")
-            if not (usr and pwd and rng):
+            adm = row.get("Admin")
+            adm_bol = adm.strip().lower() == "true"
+            cat = row.get("Category")
+            if not (usr and pwd and rng and adm):
                 continue  # omite líneas mal formateadas
             if not User.query.filter_by(username=usr).first():
                 hashed = generate_password_hash(pwd)
-                new_user = User(username=usr, password=hashed, rank=int(rng))
+                new_user = User(
+                    username=usr, password=hashed, rank=int(rng), admin=adm_bol
+                )
                 db.session.add(new_user)
         db.session.commit()
 
@@ -86,7 +93,7 @@ def login():
 def dashboard():
     user = User.query.get(session["user_id"])
     pending = Document.query.filter_by(current_approver=user.id).all()
-    #docs = Document.query.all()
+    # docs = Document.query.all()
     return render_template("dashboard.html", user=user, documentos=pending)
 
 
@@ -97,9 +104,10 @@ def enviar_documento():
     user = User.query.get(session["user_id"])
     if request.method == "POST":
         file = request.files["documento"]
+        category = request.form.get("category")
         approvers = request.form.getlist("approvers")
 
-        if file and approvers:
+        if file and category and approvers:
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
             file.save(filepath)
@@ -111,6 +119,7 @@ def enviar_documento():
                 current_approver=approvers[0],
                 status="pending",
                 approvers=",".join(approvers),
+                category=category,
             )
             db.session.add(new_doc)
             db.session.commit()
@@ -147,7 +156,9 @@ def mis_documentos():
     estatus = request.args.get(
         "estatus", "todos"
     )  # Obtener el estatus de los parámetros de consulta
-    query = Document.query.filter_by(sender_id=session["user_id"])  # Filtrar por usuario actual
+    query = Document.query.filter_by(
+        sender_id=session["user_id"]
+    )  # Filtrar por usuario actual
 
     if estatus == "enproceso":
         query = query.filter_by(status="pending")
@@ -159,7 +170,7 @@ def mis_documentos():
     documentos = query.all()  # Filtrar los documentos según el estatus
     return render_template("mis_documentos.html", user=user, documentos=documentos)
 
- 
+
 # -- Logout --
 @app.route("/logout", methods=["GET"])
 def logout():
@@ -172,12 +183,5 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
         load_users()
-
-    # with app.app_context():
-    #     Drop all tables
-    #     db.drop_all()
-    #     Recreate all tables
-    #     db.create_all()
-    #     load_users()
 
     app.run(debug=True)
