@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -85,7 +85,7 @@ def login():
         if user and check_password_hash(user.password, password):
             session["user_id"] = user.id
             return redirect(url_for("dashboard"))
-        return "Credenciales inválidas", 401
+        flash("Credenciales inválidas", "danger")  # <--- Aquí
     return render_template("login.html")
 
 

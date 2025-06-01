@@ -11,10 +11,6 @@ import hashlib
 KEY_VAULT_URL = "https://legalbridge.vault.azure.net/"
 KEY_NAME = "PythonEncryptationEC"
 
-carpeta = 'C:\\Users\\alexe\\Documents\\Universidad\\Sexto Semestre\\Cripto\\SeguridadCriptografia\\Doc1'
-documento = os.path.join(carpeta, "Ejemplo Proceso de autorización.pdf")
-ruta_de_firma = os.path.join(carpeta, "firma_documento.bin")
-
 # Autenticación
 credential = DefaultAzureCredential()
 key_client = KeyClient(vault_url=KEY_VAULT_URL, credential=credential)
@@ -48,20 +44,20 @@ def test_entra_id_connection():
         print("Fallo en Entra ID:", str(e))
         return False
 
-def firmar_archivo_bin(ruta_archivo, ruta_firma=ruta_de_firma):
+def firmar_archivo_bin(ruta_archivo, ruta_firma=None):
     with open(ruta_archivo, "rb") as f:
         contenido = f.read()
-    digest = hashlib.sha256(contenido).digest()  # Calcula el hash SHA-256
-
+    digest = hashlib.sha256(contenido).digest()
     resultado = crypto_client.sign(SignatureAlgorithm.es256, digest)
     
-    with open(ruta_firma, "wb") as f:
-        f.write(resultado.signature)
+    if ruta_firma:
+        with open(ruta_firma, "wb") as f:
+            f.write(resultado.signature)
 
     print(f"Documento firmado con Key Vault: {ruta_archivo}")
-    return resultado.signature  # Devuelve la firma binaria si la necesitas
+    return resultado.signature  # Esto es lo que guardas en la base de datos
 
-def verificar_firma(ruta_archivo, ruta_firma=ruta_de_firma):
+def verificar_firma(ruta_archivo, ruta_firma):
     with open(ruta_archivo, "rb") as f:
         contenido = f.read()
     with open(ruta_firma, "rb") as f:
@@ -77,6 +73,3 @@ def verificar_firma(ruta_archivo, ruta_firma=ruta_de_firma):
         print("Firma inválida (Key Vault)")
         return False
 
-# Ejecutar firma y verificación
-#firmar_archivo(documento)
-#verificar_firma(documento)
