@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Previsualizar Documento</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Previsualización del Documento</h2>
+        <hr>
+        <p><strong>Archivo:</strong> {{ doc.filename }}</p>
+        <p><strong>Categoría:</strong> {{ doc.category }}</p>
+        <p><strong>Enviado por:</strong> {{ doc.sender_id }}</p>
+        <p><strong>Estado:</strong> {{ doc.status }}</p>
+        <iframe src="{{ url_for('static', filename='../uploads/' + doc.filename) }}" width="100%" height="500px"></iframe>
+        <form method="POST" action="{{ url_for('aprobar_documento', doc_id=doc.id) }}">
+            <button type="submit" class="btn btn-success mt-3">Firmar y Aprobar</button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mt-3">Cancelar</a>
+        </form>
+    </div>
+</body>
+</html>

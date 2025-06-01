@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import csv, os
 from functools import wraps
+from digital_signature import firmar_archivo_bin  # Asegúrate de que el import sea correcto
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "tu_clave_secreta"
@@ -34,6 +35,7 @@ class Document(db.Model):
     status = db.Column(db.String(20))  # pending, approved, rejected
     approvers = db.Column(db.String(255))  # IDs separados por comas
     category = db.Column(db.String(255))
+    signature_bin = db.Column(db.LargeBinary)  # <--- NUEVO CAMPO
 
 
 # --- Carga de usuarios desde CSV (solo UTF-8 sin BOM) ---
@@ -131,8 +133,18 @@ def enviar_documento():
     return render_template("enviar_documento.html", user=user, users=users)
 
 
+@app.route("/previsualizar_documento/<int:doc_id>")
+@login_required
+def previsualizar_documento(doc_id):
+    doc = Document.query.get(doc_id)
+    if not doc:
+        return "Documento no encontrado", 404
+    user = User.query.get(session["user_id"])
+    return render_template("previsualizar_documento.html", doc=doc, user=user)
+
+
 # -- Aprobar Documento --
-@app.route("/aprobar_documento/<int:doc_id>")
+@app.route("/aprobar_documento/<int:doc_id>", methods=["POST"])
 @login_required
 def aprobar_documento(doc_id):
     doc = Document.query.get(doc_id)
@@ -143,6 +155,10 @@ def aprobar_documento(doc_id):
         doc.current_approver = approvers[current_index + 1]
     else:
         doc.status = "approved"
+        doc.current_approver = None
+        # Firmar y guardar la firma en la base de datos
+        signature_bin = firmar_archivo_bin(doc.filepath)
+        doc.signature_bin = signature_bin
 
     db.session.commit()
     return redirect(url_for("dashboard"))
@@ -169,6 +185,19 @@ def mis_documentos():
 
     documentos = query.all()  # Filtrar los documentos según el estatus
     return render_template("mis_documentos.html", user=user, documentos=documentos)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # -- Logout --
