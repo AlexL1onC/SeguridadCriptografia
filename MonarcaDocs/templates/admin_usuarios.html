@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin | Monarca Docs | Usuarios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='admin_style.css') }}">
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar d-flex flex-column" style="height: 100vh;">
+                <a href="{{ url_for('admin.dashboard') }}">
+                    <img src="{{ url_for('static', filename='admin_Logo-Monarca-Home-2.png') }}" alt="Logo" class="logo mb-4">
+                </a>
+                <h5 class="mb-4">
+                    <a href="{{ url_for('admin.dashboard') }}" class="link-dashboard">Monarca Docs</a>
+                </h5>
+                <nav class="nav flex-column">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.dashboard') }}" class="nav-link text-white mb-3">
+                                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.documentos') }}" class="nav-link text-white mb-3">
+                                <i class="bi bi-files me-2"></i>Documentos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.usuarios') }}" class="nav-link active mb-3">
+                                <i class="bi bi-people me-2"></i>Usuarios
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('auth.logout') }}" class="nav-link text-white">
+                                <i class="bi bi-box-arrow-left me-2"></i>Cerrar Sesión
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                <div class="mt-auto text-white">
+                    <hr>
+                    <p>
+                        <strong>Usuario:</strong> {{ user.username }}
+                        |
+                        <strong>Rango:</strong> {{ user.rank }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <h1>Usuarios</h1>
+                <hr>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <strong>Hay {{ usuarios|length }} usuarios</strong>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                            <i class="bi bi-person-plus me-2"></i>Agregar Usuario
+                        </button>
+                    </div>
+                </div>
+
+                {% if usuarios %}
+                <table class="table table-hover table-bordered tabla-usuarios">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Usuario</th>
+                            <th>Rango</th>
+                            <th>Admin</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    {% for usuario in usuarios %}
+                    <tr>
+                        <td>{{ usuario.id }}</td>
+                        <td>{{ usuario.username }}</td>
+                        <td>{{ usuario.rank }}</td>
+                        <td>
+                            {% if usuario.admin %}
+                            <span class="badge bg-success">Sí</span>
+                            {% else %}
+                            <span class="badge bg-secondary">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                data-bs-target="#editUserModal{{ usuario.id }}">
+                                <i class="bi bi-pencil me-1"></i>Editar
+                            </button>
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                data-bs-target="#deleteUserModal{{ usuario.id }}">
+                                <i class="bi bi-trash me-1"></i>Eliminar
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Edit User Modal -->
+                    <div class="modal fade" id="editUserModal{{ usuario.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Editar Usuario</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form action="{{ url_for('admin.editar_usuario', user_id=usuario.id) }}" method="POST">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label for="username" class="form-label">Usuario</label>
+                                            <input type="text" class="form-control" id="username" name="username"
+                                                value="{{ usuario.username }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="rank" class="form-label">Rango</label>
+                                            <select class="form-select" id="rank" name="rank" required>
+                                                <option value="1" {% if usuario.rank == 1 %}selected{% endif %}>1</option>
+                                                <option value="2" {% if usuario.rank == 2 %}selected{% endif %}>2</option>
+                                                <option value="3" {% if usuario.rank == 3 %}selected{% endif %}>3</option>
+                                                <option value="4" {% if usuario.rank == 4 %}selected{% endif %}>4</option>
+                                                <option value="5" {% if usuario.rank == 5 %}selected{% endif %}>5</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="password" class="form-label">Nueva Contraseña (opcional)</label>
+                                            <input type="password" class="form-control" id="password" name="password">
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="admin{{ usuario.id }}" name="admin" {% if usuario.admin %}checked{% endif %}>
+                                                <label class="form-check-label" for="admin{{ usuario.id }}">
+                                                    Es administrador
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delete User Modal -->
+                    <div class="modal fade" id="deleteUserModal{{ usuario.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    ¿Estás seguro de que deseas eliminar al usuario <strong>{{ usuario.username }}</strong>?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <form action="{{ url_for('admin.eliminar_usuario', user_id=usuario.id) }}" method="POST"
+                                        style="display: inline;">
+                                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </table>
+                {% else %}
+                <p class="mt-4">No hay usuarios registrados.</p>
+                {% endif %}
+
+                <!-- Add User Modal -->
+                <div class="modal fade" id="addUserModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Agregar Usuario</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form action="{{ url_for('admin.agregar_usuario') }}" method="POST">
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label for="new_username" class="form-label">Usuario</label>
+                                        <input type="text" class="form-control" id="new_username" name="username" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="new_password" class="form-label">Contraseña</label>
+                                        <input type="password" class="form-control" id="new_password" name="password"
+                                            required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="new_rank" class="form-label">Rango</label>
+                                        <select class="form-select" id="new_rank" name="rank" required>
+                                            <option value="" selected disabled>Seleccionar rango...</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="new_admin" name="admin">
+                                            <label class="form-check-label" for="new_admin">
+                                                Es administrador
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary">Agregar Usuario</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html> 

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin | Monarca Docs | Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='admin_style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3 col-lg-2 sidebar d-flex flex-column" style="height: 100vh;">
+                <a href="{{ url_for('admin.dashboard') }}">
+                    <img src="{{ url_for('static', filename='admin_Logo-Monarca-Home-2.png') }}" alt="Logo" class="logo mb-4">
+                </a>
+                <h5 class="mb-4">
+                    <a href="{{ url_for('admin.dashboard') }}" class="link-dashboard">Monarca Docs</a>
+                </h5>
+                <nav class="nav flex-column">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.dashboard') }}" class="nav-link active mb-3">
+                                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.documentos') }}" class="nav-link text-white mb-3">
+                                <i class="bi bi-files me-2"></i>Documentos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin.usuarios') }}" class="nav-link text-white mb-3">
+                                <i class="bi bi-people me-2"></i>Usuarios
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('auth.logout') }}" class="nav-link text-white">
+                                <i class="bi bi-box-arrow-left me-2"></i>Cerrar Sesión
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                <div class="mt-auto text-white">
+                    <hr>
+                    <p>
+                        <strong>Usuario:</strong> {{ user.username }}
+                        |
+                        <strong>Rango:</strong> {{ user.rank }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-9 col-lg-10 main-content">
+                <h1>Bienvenido Admin</h1>
+                <hr>
+
+                <div id="documentsByStatusData" data-json='{{ documents_by_status | tojson }}' style="display:none;">
+                </div>
+                <div id="documentsByCategoryData" data-json='{{ documents_by_category | tojson }}' style="display:none;">
+                </div>
+
+                <div class="row mb-5">
+                    <div class="col-md-6">
+                        <h5 class="text-center mb-3">Documentos por Estatus</h5>
+                        <div style="height: 300px; width: 100%;">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="text-center mb-3">Documentos por Categoría</h5>
+                        <div style="height: 300px; width: 100%;">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Retrieve data from hidden divs and parse JSON
+        const documentsByStatusElement = document.getElementById('documentsByStatusData');
+        const documentsByStatus = JSON.parse(documentsByStatusElement.dataset.json);
+
+        const documentsByCategoryElement = document.getElementById('documentsByCategoryData');
+        const documentsByCategory = JSON.parse(documentsByCategoryElement.dataset.json);
+
+        // --- Chart for Documents by Status (Pie Chart) ---
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(documentsByStatus),
+                datasets: [{
+                    data: Object.values(documentsByStatus),
+                    backgroundColor: [
+                        'rgba(44, 123, 229, 0.7)',  // Professional blue
+                        'rgba(23, 162, 135, 0.7)',  // Teal
+                        'rgba(255, 122, 89, 0.7)',  // Coral
+                        'rgba(108, 117, 125, 0.7)', // Gray
+                        'rgba(99, 99, 255, 0.7)'    // Indigo
+                    ],
+                    borderColor: [
+                        'rgba(44, 123, 229, 1)',
+                        'rgba(23, 162, 135, 1)',
+                        'rgba(255, 122, 89, 1)',
+                        'rgba(108, 117, 125, 1)',
+                        'rgba(99, 99, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: false,
+                    }
+                }
+            }
+        });
+
+        // --- Chart for Documents by Category (Bar Chart) ---
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(documentsByCategory),
+                datasets: [{
+                    label: 'Número de Documentos',
+                    data: Object.values(documentsByCategory),
+                    backgroundColor: [
+                        'rgba(44, 123, 229, 0.7)',  // Professional blue
+                        'rgba(23, 162, 135, 0.7)',  // Teal
+                        'rgba(255, 122, 89, 0.7)',  // Coral
+                        'rgba(108, 117, 125, 0.7)', // Gray
+                        'rgba(99, 99, 255, 0.7)',   // Indigo
+                        'rgba(45, 152, 218, 0.7)'   // Light blue
+                    ],
+                    borderColor: [
+                        'rgba(44, 123, 229, 1)',
+                        'rgba(23, 162, 135, 1)',
+                        'rgba(255, 122, 89, 1)',
+                        'rgba(108, 117, 125, 1)',
+                        'rgba(99, 99, 255, 1)',
+                        'rgba(45, 152, 218, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: false,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
