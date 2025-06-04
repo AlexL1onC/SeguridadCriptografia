@@ -112,6 +112,9 @@
                             <a href="{{ url_for('admin.ver_documento', doc_id=documento.id) }}" class="btn btn-primary btn-sm" target="_blank">
                                 <i class="bi bi-eye me-1"></i>Ver
                             </a>
+                            <a href="{{ url_for('admin.editar_aprobadores', doc_id=documento.id) }}" class="btn btn-sm btn-outline-secondary">
+                                Editar aprobadores
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}

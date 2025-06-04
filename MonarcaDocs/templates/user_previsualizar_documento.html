@@ -16,11 +16,13 @@
                 <a href="{{ url_for('user.dashboard') }}">
                     <img src="{{ url_for('static', filename='user_Logo-Monarca-Home.png') }}" alt="Logo" class="logo mb-4">
                 </a>
-                <h5 class="mb-4">
-                    <a href="{{ url_for('user.dashboard') }}" class="link-dashboard">Monarca Docs</a>
-                </h5>
                 <nav class="nav flex-column">
                     <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a href="{{ url_for('user.dashboard') }}" class="nav-link text-white mb-3">
+                                <i class="bi bi-house-door me-2"></i>Monarca Docs
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a href="{{ url_for('user.enviar_documento') }}" class="nav-link text-white mb-3">
                                 <i class="bi bi-send me-2"></i>Enviar Documento
@@ -66,6 +68,11 @@
                         <form method="POST" action="{{ url_for('user.aprobar_documento', doc_id=doc.id) }}" class="d-inline">
                             <button type="submit" class="btn btn-success">
                                 <i class="bi bi-check-circle me-2"></i>Firmar y Aprobar
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('user.rechazar_documento', doc_id=doc.id) }}" class="d-inline ms-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-x-circle me-2"></i>Rechazar
                             </button>
                         </form>
                         <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary">

@@ -17,9 +17,13 @@
             <div class="col-md-3 col-lg-2 sidebar d-flex flex-column" style="height: 100vh;">
                 <a href="{{ url_for('user.dashboard') }}"><img src="{{ url_for('static', filename='user_Logo-Monarca-Home.png') }}" alt="Logo"
                         class="logo mb-4"></a>
-                <h5 class="mb-4"><a href="{{ url_for('user.dashboard') }}" class="link-dashboard">Monarca Docs</a></h5>
                 <nav class="nav flex-column">
                     <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a href="{{ url_for('user.dashboard') }}" class="nav-link text-white mb-3">
+                                <i class="bi bi-house-door me-2"></i>Monarca Docs
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a href="{{ url_for('user.enviar_documento') }}" class="nav-link text-white mb-3">
                                 <i class="bi bi-send me-2"></i>Enviar Documento
@@ -60,30 +64,128 @@
                     {% endif %}
                 {% endwith %}
 
-                <h1>Bienvenido</h1>
-                <hr>
-
-                {% if documentos %}
-                <h5>Documentos por Autorizar</h5>
-                <br>
-
-                {% for doc in documentos %}
-                <div class="document-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5>{{ doc.filename }}</h5>
-                            <small class="text-muted">Enviado el: [Fecha]</small>
+                <div class="container py-4">
+                    <h2 class="fw-bold mb-1">Dashboard</h2>
+                    <p class="text-muted mb-4">Bienvenido a tu panel de firma digital</p>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card shadow-sm text-center">
+                                <div class="card-body">
+                                    <div class="fs-4 fw-bold">{{ total }}</div>
+                                    <div class="text-muted small">Documentos Totales</div>
+                                </div>
+                            </div>
                         </div>
-                        <a href="{{ url_for('user.previsualizar_documento', doc_id=doc.id) }}" class="btn btn-primary">
-                            <i class="bi bi-check-circle me-2"></i>Aprobar
-                        </a>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm text-center">
+                                <div class="card-body">
+                                    <div class="fs-4 fw-bold">{{ firmados }}</div>
+                                    <div class="text-muted small">Documentos Firmados</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm text-center">
+                                <div class="card-body">
+                                    <div class="fs-4 fw-bold">{{ pendientes }}</div>
+                                    <div class="text-muted small">Pendientes de Firma</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm text-center">
+                                <div class="card-body">
+                                    <div class="fs-4 fw-bold">{{ espacio_usado_mb }} MB</div>
+                                    <div class="text-muted small">Espacio Utilizado</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <div class="card shadow-sm mb-3">
+                                <div class="card-body">
+                                    <h5 class="fw-bold mb-2">Documentos Recientes</h5>
+                                    <p class="text-muted small mb-3">Los últimos documentos que has subido o firmado</p>
+                                    <ul class="list-group list-group-flush">
+                                        {% for doc in recientes %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <i class="bi bi-file-earmark-text me-2"></i>
+                                                <a href="{{ url_for('user.ver_documento', doc_id=doc.id) }}" class="fw-semibold">{{ doc.filename }}</a>
+                                                <span class="text-muted small ms-2">({{ doc.category }})</span>
+                                            </div>
+                                            <span class="badge {% if doc.status == 'approved' %}bg-success{% elif doc.status == 'pending' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                                {% if doc.status == 'approved' %}Firmado{% elif doc.status == 'pending' %}Pendiente{% else %}Rechazado{% endif %}
+                                            </span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    <a href="{{ url_for('user.mis_documentos') }}" class="btn btn-outline-secondary mt-3">Ver todos los documentos</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card shadow-sm mb-3">
+                                <div class="card-body">
+                                    <h5 class="fw-bold mb-3">Acciones Rápidas</h5>
+                                    <a href="{{ url_for('user.enviar_documento') }}" class="btn btn-dark w-100 mb-2">
+                                        <i class="bi bi-send me-2"></i>Subir nuevo documento
+                                    </a>
+                                    <a href="{{ url_for('user.mis_documentos') }}" class="btn btn-outline-dark w-100 mb-2">
+                                        <i class="bi bi-files me-2"></i>Ver mis documentos
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                {% endfor %}
-                {% else %}
-                <p class="mt-4">No hay documentos por autorizar.</p>
-                {% endif %}
+                <!-- Fin del dashboard principal -->
 
+                <!-- Explicación paso a paso -->
+                <div class="container mt-5">
+                    <h4 class="fw-bold mb-3">¿Cómo funciona Monarca Docs?</h4>
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <div class="card h-100 shadow-sm border-0">
+                                <div class="card-body text-center">
+                                    <div class="mb-2 display-5 text-primary"><i class="bi bi-upload"></i></div>
+                                    <h6 class="fw-bold mb-2">1. Sube tu documento</h6>
+                                    <p class="text-muted small mb-0">Elige el archivo que deseas firmar y súbelo a la plataforma de forma segura.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card h-100 shadow-sm border-0">
+                                <div class="card-body text-center">
+                                    <div class="mb-2 display-5 text-primary"><i class="bi bi-person-check"></i></div>
+                                    <h6 class="fw-bold mb-2">2. Selecciona aprobadores</h6>
+                                    <p class="text-muted small mb-0">Elige a las personas que deben revisar y firmar tu documento.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card h-100 shadow-sm border-0">
+                                <div class="card-body text-center">
+                                    <div class="mb-2 display-5 text-primary"><i class="bi bi-pencil-square"></i></div>
+                                    <h6 class="fw-bold mb-2">3. Firma y aprueba</h6>
+                                    <p class="text-muted small mb-0">Los aprobadores reciben una notificación y pueden revisar, firmar o rechazar el documento.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card h-100 shadow-sm border-0">
+                                <div class="card-body text-center">
+                                    <div class="mb-2 display-5 text-primary"><i class="bi bi-check-circle"></i></div>
+                                    <h6 class="fw-bold mb-2">4. Descarga tu documento</h6>
+                                    <p class="text-muted small mb-0">Cuando todos han firmado, descarga tu documento firmado digitalmente.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Fin explicación paso a paso -->
             </div>
         </div>
     </div>

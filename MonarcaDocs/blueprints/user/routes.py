@@ -26,14 +26,56 @@ def check_user():
 @user_required
 def dashboard():
     user = User.query.get(session["user_id"])
-    pending = Document.query.filter_by(current_approver=user.id).all()
-    return render_template("user_dashboard.html", user=user, documentos=pending)
+    # Documentos donde el usuario es aprobador o remitente
+    docs = Document.query.filter(
+        (Document.sender_id == user.id) | (Document.approvers.contains(str(user.id)))
+    ).order_by(Document.id.desc()).all()
+
+    total = len(docs)
+    firmados = sum(1 for d in docs if d.status == "approved")
+    pendientes = sum(1 for d in docs if d.status == "pending")
+    rechazados = sum(1 for d in docs if d.status == "rejected")
+    # Ejemplo de espacio usado (puedes calcularlo si quieres)
+    espacio_usado = sum(os.path.getsize(d.filepath) for d in docs if os.path.exists(d.filepath))
+    espacio_usado_mb = round(espacio_usado / (1024 * 1024), 1)
+
+    # Documentos recientes (últimos 4)
+    recientes = docs[:4]
+
+    return render_template(
+        "user_dashboard.html",
+        user=user,
+        total=total,
+        firmados=firmados,
+        pendientes=pendientes,
+        rechazados=rechazados,
+        espacio_usado_mb=espacio_usado_mb,
+        recientes=recientes,
+    )
 
 
 @bp.route("/enviar_documento", methods=["GET", "POST"])
 @user_required
 def enviar_documento():
+    selected_approvers = request.form.getlist("approvers")
     user = User.query.get(session["user_id"])
+    area = request.args.get("area", "")
+    nivel = request.args.get("nivel", "")
+
+    # Obtén todos los valores únicos de área y nivel para los selectores
+    areas = [a[0] for a in db.session.query(User.area).distinct().all() if a[0]]
+    niveles = sorted(set(u.rank for u in User.query.all()))
+
+    # Filtra los usuarios aprobadores
+    users_query = User.query.filter(User.rank > user.rank)
+    if area:
+        users_query = users_query.filter_by(area=area)
+    if nivel:
+        users_query = users_query.filter_by(rank=int(nivel))
+    if selected_approvers:
+        users_query = users_query.filter(~User.id.in_([int(a) for a in selected_approvers]))
+    users = users_query.all()
+
     if request.method == "POST":
         file = request.files["documento"]
         category = request.form.get("category")
@@ -75,9 +117,19 @@ def enviar_documento():
             if not approvers:
                 flash("Por favor selecciona al menos un aprobador", "danger")
 
-    current_user = User.query.get(session["user_id"])
-    users = User.query.filter(User.rank > current_user.rank).all()
-    return render_template("user_enviar_documento.html", user=user, users=users)
+    selected_users = []
+    if selected_approvers:
+        selected_users = User.query.filter(User.id.in_([int(a) for a in selected_approvers])).all()
+
+    return render_template(
+        "user_enviar_documento.html",
+        user=user,
+        users=users,
+        areas=areas,
+        niveles=niveles,
+        selected_users=selected_users,
+        selected_approvers=selected_approvers,
+    )
 
 
 @bp.route("/previsualizar_documento/<int:doc_id>")
@@ -87,6 +139,10 @@ def previsualizar_documento(doc_id):
     if not doc:
         return "Documento no encontrado", 404
     user = User.query.get(session["user_id"])
+    # Solo puede acceder si es aprobador asignado y NO es el remitente
+    if str(user.id) not in doc.approvers.split(",") or doc.sender_id == user.id:
+        flash("No tienes permiso para firmar o rechazar este documento.", "danger")
+        return redirect(url_for("user.dashboard"))
     return render_template("user_previsualizar_documento.html", doc=doc, user=user)
 
 
@@ -121,18 +177,23 @@ def aprobar_documento(doc_id):
 @user_required
 def mis_documentos():
     user = User.query.get(session["user_id"])
-    estatus = request.args.get("estatus", "todos")
-    query = Document.query.filter_by(sender_id=session["user_id"])
-
-    if estatus == "enproceso":
-        query = query.filter_by(status="pending")
-    elif estatus == "aprobado":
-        query = query.filter_by(status="approved")
-    elif estatus == "rechazado":
-        query = query.filter_by(status="rejected")
-
-    documentos = query.all()
-    return render_template("user_mis_documentos.html", user=user, documentos=documentos)
+    # Documentos donde el usuario es el aprobador actual
+    documentos_para_firmar = Document.query.filter(
+        Document.current_approver == user.id,
+        Document.status == "pending"
+    ).all()
+    # Documentos donde el usuario es remitente y aún están pendientes
+    documentos_esperando_firma = Document.query.filter(
+        Document.sender_id == user.id,
+        Document.status == "pending"
+    ).all()
+    # Puedes agregar más filtros según lo que necesites mostrar
+    return render_template(
+        "user_mis_documentos.html",
+        user=user,
+        documentos_para_firmar=documentos_para_firmar,
+        documentos_esperando_firma=documentos_esperando_firma,
+    )
 
 
 @bp.route("/serve_documento/<int:doc_id>")
@@ -160,3 +221,13 @@ def ver_documento(doc_id):
         return "Documento no encontrado", 404
     user = User.query.get(session["user_id"])
     return render_template("user_ver_documento.html", doc=doc, user=user)
+
+
+@bp.route("/rechazar_documento/<int:doc_id>", methods=["POST"])
+@user_required
+def rechazar_documento(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    doc.status = "rejected"
+    db.session.commit()
+    flash("Documento rechazado correctamente.", "warning")
+    return redirect(url_for("user.dashboard"))

@@ -1,6 +1,7 @@
 import os
 import csv
 from models import db, User
+from werkzeug.security import generate_password_hash
 
 def init_directories(app):
     """Create necessary directories if they don't exist."""
@@ -32,16 +33,18 @@ def load_initial_users(app):
                 pwd = row.get("Contraseña")
                 rng = row.get("Rango")
                 adm = row.get("Admin")
+                area = row.get("Area")  # <-- Nuevo
 
-                if not (usr and pwd and rng and adm):
+                if not (usr and pwd and rng and adm and area):
                     continue
 
                 if not User.query.filter_by(username=usr).first():
                     new_user = User(
                         username=usr,
-                        password=pwd,
+                        password=generate_password_hash(pwd),  # Solo aquí se hashea
                         rank=int(rng),
                         admin=adm.strip().lower() == "true",
+                        area=area.strip(),
                     )
                     db.session.add(new_user)
             db.session.commit()
@@ -54,4 +57,4 @@ def init_database(app):
     """Initialize database and load initial data."""
     with app.app_context():
         db.create_all()
-        load_initial_users(app) 
+        load_initial_users(app)

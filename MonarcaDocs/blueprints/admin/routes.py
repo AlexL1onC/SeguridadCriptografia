@@ -154,4 +154,25 @@ def serve_documento(doc_id):
         doc = Document.query.get_or_404(doc_id)
         return send_file(doc.filepath, as_attachment=False)
     except Exception as e:
-        return render_template("admin_serve_documento_error.html", error_message=f"Error al cargar el documento: {str(e)}") 
+        return render_template("admin_serve_documento_error.html", error_message=f"Error al cargar el documento: {str(e)}")
+
+@bp.route('/documentos/editar_aprobadores/<int:doc_id>', methods=['GET', 'POST'])
+@admin_required
+def editar_aprobadores(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    usuarios = User.query.all()
+    if request.method == 'POST':
+        nuevos_aprobadores = request.form.getlist('approvers')
+        if not nuevos_aprobadores:
+            flash('Debes seleccionar al menos un aprobador', 'danger')
+            return redirect(url_for('admin.editar_aprobadores', doc_id=doc_id))
+        doc.approvers = ",".join(nuevos_aprobadores)
+        # Opcional: reiniciar el flujo de aprobación
+        doc.current_approver = int(nuevos_aprobadores[0])
+        doc.status = "pending"
+        db.session.commit()
+        flash('Aprobadores actualizados correctamente', 'success')
+        return redirect(url_for('admin.documentos'))
+    # Para mostrar los aprobadores actuales como seleccionados
+    aprobadores_actuales = [int(uid) for uid in doc.approvers.split(",") if uid]
+    return render_template('admin_editar_aprobadores.html', doc=doc, usuarios=usuarios, aprobadores_actuales=aprobadores_actuales)

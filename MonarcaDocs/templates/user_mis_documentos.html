@@ -17,9 +17,13 @@
             <div class="col-md-3 col-lg-2 sidebar d-flex flex-column" style="height: 100vh;">
                 <a href="{{ url_for('user.dashboard') }}"><img src="{{ url_for('static', filename='user_Logo-Monarca-Home.png') }}" alt="Logo"
                         class="logo mb-4"></a>
-                <h5 class="mb-4"><a href="{{ url_for('user.dashboard') }}" class="link-dashboard">Monarca Docs</a></h5>
                 <nav class="nav flex-column">
                     <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a href="{{ url_for('user.dashboard') }}" class="nav-link text-white mb-3">
+                                <i class="bi bi-house-door me-2"></i>Monarca Docs
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a href="{{ url_for('user.enviar_documento') }}" class="nav-link text-white mb-3">
                                 <i class="bi bi-send me-2"></i>Enviar Documento
@@ -121,6 +125,82 @@
                 </table>
                 {% else %}
                 <p class="mt-4">No hay documentos disponibles.</p>
+                {% endif %}
+
+                <!-- Documentos que debes firmar -->
+                <h2 class="mt-4 mb-3">Documentos que debes firmar</h2>
+                {% if documentos_para_firmar %}
+                <table class="table table-hover table-bordered tabla-documentos">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Archivo</th>
+                            <th>Categoría</th>
+                            <th>Remitente</th>
+                            <th>Estatus</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for doc in documentos_para_firmar %}
+                    <tr>
+                        <td>{{ doc.id }}</td>
+                        <td>{{ doc.filename }}</td>
+                        <td>{{ doc.category }}</td>
+                        <td>{{ doc.sender_id }}</td>
+                        <td>
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('user.previsualizar_documento', doc_id=doc.id) }}" class="btn btn-primary btn-sm" target="_blank">
+                                <i class="bi bi-pencil-square me-1"></i>Firmar/Revisar
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>No tienes documentos pendientes de firma.</p>
+                {% endif %}
+
+                <!-- Documentos que esperan tu firma -->
+                <h2 class="mt-5 mb-3">Documentos que esperan ser firmados</h2>
+                {% if documentos_esperando_firma %}
+                <table class="table table-hover table-bordered tabla-documentos">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Archivo</th>
+                            <th>Categoría</th>
+                            <th>Aprobadores</th>
+                            <th>Actual</th>
+                            <th>Estatus</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for doc in documentos_esperando_firma %}
+                    <tr>
+                        <td>{{ doc.id }}</td>
+                        <td>{{ doc.filename }}</td>
+                        <td>{{ doc.category }}</td>
+                        <td>{{ doc.approvers }}</td>
+                        <td>{{ doc.current_approver }}</td>
+                        <td>
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('user.ver_documento', doc_id=doc.id) }}" class="btn btn-primary btn-sm" target="_blank">
+                                <i class="bi bi-eye me-1"></i>Ver
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>No tienes documentos esperando ser firmados por otros.</p>
                 {% endif %}
             </div>
         </div>

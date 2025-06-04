@@ -17,9 +17,13 @@
             <div class="col-md-3 col-lg-2 sidebar d-flex flex-column" style="height: 100vh;">
                 <a href="{{ url_for('user.dashboard') }}"><img src="{{ url_for('static', filename='user_Logo-Monarca-Home.png') }}" alt="Logo"
                         class="logo mb-4"></a>
-                <h5 class="mb-4"><a href="{{ url_for('user.dashboard') }}" class="link-dashboard">Monarca Docs</a></h5>
                 <nav class="nav flex-column">
                     <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a href="{{ url_for('user.dashboard') }}" class="nav-link text-white mb-3">
+                                <i class="bi bi-house-door me-2"></i>Monarca Docs
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a href="{{ url_for('user.enviar_documento') }}" class="nav-link active mb-3">
                                 <i class="bi bi-send me-2"></i>Enviar Documento
@@ -54,6 +58,32 @@
 
                 <div class="container py-2">
                     <div class="upload-container">
+                        <!-- Filtros de área y nivel (GET) -->
+                        <form method="GET" action="{{ url_for('user.enviar_documento') }}" class="row g-2 mb-2">
+                            <div class="col-auto">
+                                <select name="area" class="form-select form-select-sm">
+                                    <option value="">Todas las áreas</option>
+                                    {% for area in areas %}
+                                        <option value="{{ area }}" {% if request.args.get('area') == area %}selected{% endif %}>{{ area }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <select name="nivel" class="form-select form-select-sm">
+                                    <option value="">Todos los niveles</option>
+                                    {% for nivel in niveles %}
+                                        <option value="{{ nivel }}" {% if request.args.get('nivel') == nivel|string %}selected{% endif %}>Nivel {{ nivel }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-outline-primary btn-sm">Filtrar</button>
+                            </div>
+                            {% for approver in selected_approvers %}
+                                <input type="hidden" name="approvers" value="{{ approver }}">
+                            {% endfor %}
+                        </form>
+
                         <form method="POST" enctype="multipart/form-data">
                             <!-- File Upload -->
                             <div class="file-upload mb-2">
@@ -73,22 +103,44 @@
                             </div>
 
                             <!-- Approvers Selection -->
-                            <h5 class="mb-1">Seleccionar Destinatarios</h5>
-
-                            <div class="row g-1 mb-2">
-                                {% for user in users %}
-                                <div class="col-md-6">
-                                    <div class="user-card py-1 px-2">
-                                        <input class="form-check-input me-2" type="checkbox" name="approvers"
-                                            value="{{ user.id }}">
-                                        <div class="small">
-                                            <strong>{{ user.username }}</strong>
-                                            <span class="text-muted">- Rango {{ user.rank }}</span>
+                            <div class="mb-3">
+                                <label class="form-label"><strong>Seleccionar Destinatario</strong></label>
+                                <!-- Aquí sigue la lista de usuarios aprobadores -->
+                                <div class="row g-1 mb-2">
+                                    {% for user in users %}
+                                    <div class="col-md-6">
+                                        <div class="user-card py-1 px-2">
+                                            <input class="form-check-input me-2" type="checkbox" name="approvers"
+                                                value="{{ user.id }}">
+                                            <div class="small">
+                                                <strong>{{ user.username }}</strong>
+                                                <span class="text-muted">- Rango {{ user.rank }}</span>
+                                            </div>
                                         </div>
                                     </div>
+                                    {% endfor %}
                                 </div>
-                                {% endfor %}
                             </div>
+
+                            {% if selected_users %}
+                            <div class="mb-2">
+                                <label class="form-label"><strong>Ya seleccionados:</strong></label>
+                                <div class="row g-1">
+                                    {% for user in selected_users %}
+                                    <div class="col-md-6">
+                                        <div class="user-card py-1 px-2 bg-light">
+                                            <input class="form-check-input me-2" type="checkbox" name="approvers"
+                                                value="{{ user.id }}" checked>
+                                            <div class="small">
+                                                <strong>{{ user.username }}</strong>
+                                                <span class="text-muted">- Rango {{ user.rank }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
 
                             <!-- Submit Button -->
                             <div class="d-grid">

@@ -1,6 +1,8 @@
-Usuario,Contraseña,Rango,Admin
-Ejemplo1,CasaMonarca1,1,False
-Ejemplo2,CasaMonarca2,2,False
-Ejemplo3,CasaMonarca3,3,False
-Ejemplo4,CasaMonarca4,4,False
-Admin,Admin25,0,True
+Usuario,Contraseña,Rango,Admin,Area
+Ejemplo1,CasaMonarca1,1,False,Humanitaria
+Ejemplo2,CasaMonarca2,2,False,Humanitaria
+Ejemplo3,CasaMonarca3,3,False,PsicoSocial
+Ejemplo4,CasaMonarca4,4,False,Legal
+Alexei,Carrillo,3,False,Comunicacion
+Leonardo,Regil,4,False,Almacen
+Admin,Admin25,0,True,Humanitaria
