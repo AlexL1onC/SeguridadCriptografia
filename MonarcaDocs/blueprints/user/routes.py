@@ -62,6 +62,7 @@ def enviar_documento():
     area = request.args.get("area", "")
     nivel = request.args.get("nivel", "")
 
+
     # Obtén todos los valores únicos de área y nivel para los selectores
     areas = [a[0] for a in db.session.query(User.area).distinct().all() if a[0]]
     niveles = sorted(set(u.rank for u in User.query.all()))
@@ -177,22 +178,34 @@ def aprobar_documento(doc_id):
 @user_required
 def mis_documentos():
     user = User.query.get(session["user_id"])
-    # Documentos donde el usuario es el aprobador actual
     documentos_para_firmar = Document.query.filter(
         Document.current_approver == user.id,
         Document.status == "pending"
     ).all()
-    # Documentos donde el usuario es remitente y aún están pendientes
     documentos_esperando_firma = Document.query.filter(
         Document.sender_id == user.id,
         Document.status == "pending"
     ).all()
-    # Puedes agregar más filtros según lo que necesites mostrar
+    documentos_almacenados = Document.query.filter(
+        (Document.status == "approved") &
+        (
+            (Document.sender_id == user.id) |
+            (Document.approvers.contains(str(user.id)))
+        )
+    ).all()
+    # Obtener todos los usuarios relevantes
+    user_ids = set()
+    for doc in documentos_almacenados:
+        user_ids.update([int(uid) for uid in doc.approvers.split(",") if uid.isdigit()])
+    users = User.query.filter(User.id.in_(user_ids)).all()
+    users_dict = {u.id: u.username for u in users}
     return render_template(
         "user_mis_documentos.html",
         user=user,
         documentos_para_firmar=documentos_para_firmar,
         documentos_esperando_firma=documentos_esperando_firma,
+        documentos_almacenados=documentos_almacenados,
+        users_dict=users_dict,
     )
 
 

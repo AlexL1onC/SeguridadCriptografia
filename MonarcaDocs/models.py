@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
+from datetime import datetime
 
 db = SQLAlchemy()
 
@@ -24,3 +25,4 @@ class Document(db.Model):
     approvers = db.Column(db.String(255))  # IDs separated by comas
     category = db.Column(db.String(255))
     signature_bin = db.Column(db.LargeBinary)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
